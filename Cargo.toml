@@ -1,3 +1,5 @@
+workspace = { members = ["browser_mechanics_core"] }
+
 [package]
 name = "browser_mechanics"
 version = "0.1.0"
