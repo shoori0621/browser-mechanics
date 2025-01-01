@@ -1,8 +1,0 @@
-[package]
-name = "net_wasabi"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-browser_mechanics_core = { path = "../../browser_mechanics_core" }
-noli = { git = "https://github.com/hikalium/wasabi.git", branch = "for_saba" }

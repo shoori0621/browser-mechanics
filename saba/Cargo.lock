@@ -15,19 +15,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b7e4c2464d97fe331d41de9d5db0def0a96f4d823b8b32a2efd503578988973"
 
 [[package]]
-name = "browser_mechanics"
-version = "0.1.0"
-dependencies = [
- "browser_mechanics_core",
- "net_wasabi",
- "noli",
-]
-
-[[package]]
-name = "browser_mechanics_core"
-version = "0.1.0"
-
-[[package]]
 name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -80,14 +67,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3c8dda44ff03a2f238717214da50f65d5a53b45cd213a7370424ffdb6fae815"
 
 [[package]]
-name = "net_wasabi"
-version = "0.1.0"
-dependencies = [
- "browser_mechanics_core",
- "noli",
-]
-
-[[package]]
 name = "noli"
 version = "0.1.0"
 source = "git+https://github.com/hikalium/wasabi.git?branch=for_saba#abf27c6f587e777fce5c53234d45d997ed075996"
@@ -117,11 +96,18 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.37"
+version = "1.0.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5b9d34b8991d19d98081b46eacdd8eb58c6f2b201139f7c5f643cc155a633af"
+checksum = "0e4dccaaaf89514f546c693ddc140f729f958c247918a13380cccc6078391acc"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "saba"
+version = "0.1.0"
+dependencies = [
+ "noli",
 ]
 
 [[package]]
@@ -131,9 +117,9 @@ source = "git+https://github.com/hikalium/wasabi.git?branch=for_saba#abf27c6f587
 
 [[package]]
 name = "syn"
-version = "2.0.90"
+version = "2.0.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "919d3b74a5dd0ccd15aeb8f93e7006bd9e14c295087c9896a110f490752bcf31"
+checksum = "9c786062daee0d6db1132800e623df74274a0a87322d8e183338e01b3d98d058"
 dependencies = [
  "proc-macro2",
  "quote",

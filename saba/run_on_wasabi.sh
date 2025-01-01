@@ -4,7 +4,7 @@ HOME_PATH=$PWD
 TARGET_PATH=$PWD"/build"
 OS_PATH=$TARGET_PATH"/wasabi"
 # アプリケーションの名前がsabaとは異なるとき、次の行を変更する
-APP_NAME="browser_mechanics"
+APP_NAME="saba"
 MAKEFILE_PATH=$HOME_PATH"/Makefile"
 
 # buildディレクトリを作成する
