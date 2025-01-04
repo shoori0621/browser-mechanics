@@ -291,6 +291,38 @@ impl Iterator for HtmlTokenizer {
 
           self.append_attribute(c, /* is_name */ true);
         }
+        State::AfterAttributeName => {
+          if c == ' ' {
+            // 空白は無視する
+            continue;
+          }
+
+          if c == '/' {
+            self.state = State::SelfClosingStartTag;
+
+            continue;
+          }
+
+          if c == '=' {
+            self.state = State::BeforeAttributeValue;
+
+            continue;
+          }
+
+          if c == '>' {
+            self.state = State::Data;
+
+            return self.take_latest_token();
+          }
+
+          if self.is_eof() {
+            return Some(HtmlToken::Eof);
+          }
+
+          self.reconsume = true;
+          self.state = State::AttributeName;
+          self.start_new_attribute();
+        }
         _ => {}
       }
     }
