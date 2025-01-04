@@ -323,6 +323,27 @@ impl Iterator for HtmlTokenizer {
           self.state = State::AttributeName;
           self.start_new_attribute();
         }
+        State::BeforeAttributeValue => {
+          if c == ' ' {
+            // 空白は無視する
+            continue;
+          }
+
+          if c == '"' {
+            self.state = State::AttributeValueDoubleQuoted;
+
+            continue;
+          }
+
+          if c == '\'' {
+            self.state = State::AttributeValueSingleQuoted;
+
+            continue;
+          }
+
+          self.reconsume = true;
+          self.state = State::AttributeValueUnquoted;
+        }
         _ => {}
       }
     }
