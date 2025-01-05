@@ -111,6 +111,21 @@ impl HtmlTokenizer {
       }
     }
   }
+
+  fn set_self_closing_flag(&mut self) {
+    assert!(self.latest_token.is_some());
+
+    if let Some(t) = self.latest_token.as_mut() {
+      match t {
+        HtmlToken::StartTag {
+          tag: _,
+          ref mut self_closing,
+          attributes: _,
+        } => *self_closing = true,
+        _ => panic!("`latest_token` should be either StartTag"),
+      }
+    }
+  }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -344,7 +359,168 @@ impl Iterator for HtmlTokenizer {
           self.reconsume = true;
           self.state = State::AttributeValueUnquoted;
         }
-        _ => {}
+        State::AttributeValueDoubleQuoted => {
+          if c == '"' {
+            self.state = State::AfterAttributeValueQuoted;
+
+            continue;
+          }
+
+          if self.is_eof() {
+            return Some(HtmlToken::Eof);
+          }
+
+          self.append_attribute(c, /* is_name */ false);
+        }
+        State::AttributeValueSingleQuoted => {
+          if c == '\'' {
+            self.state = State::AfterAttributeValueQuoted;
+
+            continue;
+          }
+
+          if self.is_eof() {
+            return Some(HtmlToken::Eof);
+          }
+
+          self.append_attribute(c, /* is_name */ false);
+        }
+        State::AttributeValueUnquoted => {
+          if c == ' ' {
+            self.state = State::BeforeAttributeName;
+
+            continue;
+          }
+
+          if c == '>' {
+            self.state = State::Data;
+
+            return self.take_latest_token();
+          }
+
+          if self.is_eof() {
+            return Some(HtmlToken::Eof);
+          }
+
+          self.append_attribute(c, /* is_name */ false);
+        }
+        State::AfterAttributeValueQuoted => {
+          if c == ' ' {
+            self.state = State::BeforeAttributeName;
+
+            continue;
+          }
+
+          if c == '/' {
+            self.state = State::SelfClosingStartTag;
+
+            continue;
+          }
+
+          if c == '>' {
+            self.state = State::Data;
+
+            return self.take_latest_token();
+          }
+
+          if self.is_eof() {
+            return Some(HtmlToken::Eof);
+          }
+
+          self.reconsume = true;
+          self.state = State::BeforeAttributeValue;
+        }
+        State::SelfClosingStartTag => {
+          if c == '>' {
+            self.set_self_closing_flag();
+            self.state = State::Data;
+
+            return self.take_latest_token();
+          }
+
+          if self.is_eof() {
+            // invalid parse error
+            return Some(HtmlToken::Eof);
+          }
+        }
+        State::ScriptData => {
+          if c == '<' {
+            self.state = State::ScriptDataLessThanSign;
+
+            continue;
+          }
+
+          if self.is_eof() {
+            return Some(HtmlToken::Eof);
+          }
+
+          return Some(HtmlToken::Char(c));
+        }
+        State::ScriptDataLessThanSign => {
+          if c == '/' {
+            // 一時的なバッファを空文字でリセット
+            self.state = State::ScriptDataEndTagOpen;
+
+            continue;
+          }
+
+          self.state = State::ScriptData;
+          self.reconsume = true;
+        }
+        State::ScriptDataEndTagOpen => {
+          if c.is_ascii_alphabetic() {
+            self.reconsume = true;
+            self.state = State::ScriptDataEndTagName;
+            self.create_tag(false);
+
+            continue;
+          }
+
+          // 仕様では、"<"と"/"の2つの文字トークンを返すとなっているが、
+          // 私たちの実装ではnextメソッドからは一つのトークンしか返せない
+          // ため、"<"のトークンのみを返す
+          self.reconsume = true;
+          self.state = State::ScriptData;
+        }
+        State::ScriptDataEndTagName => {
+          if c == '>' {
+            self.state = State::Data;
+
+            return self.take_latest_token();
+          }
+
+          if c.is_ascii_alphabetic() {
+            self.buf.push(c);
+            self.append_tag_name(c.to_ascii_lowercase());
+
+            continue;
+          }
+
+          self.state = State::TemporaryBuffer;
+          self.buf = String::from("</") + &self.buf;
+          self.buf.push(c);
+
+          continue;
+        }
+        State::TemporaryBuffer => {
+          self.reconsume = true;
+
+          if self.buf.chars().count() == 0 {
+            self.state = State::ScriptData;
+
+            continue;
+          }
+
+          // 最初の1文字を削除する
+          let c = self
+            .buf
+            .chars()
+            .nth(0)
+            .expect("self.buf should have at least 1 char");
+          self.buf.remove(0);
+
+          return Some(HtmlToken::Char(c));
+        }
       }
     }
   }
